@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -91,21 +92,55 @@ public class DashboardActivity extends AppCompatActivity implements DashboardCon
         ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line,dataArr);
         searchAutoComplete.setAdapter(newsAdapter);
        // searchView.setOnQueryTextListener(new on);
+
         searchAutoComplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int itemIndex, long id) {
                 String queryString=(String)adapterView.getItemAtPosition(itemIndex);
                 searchAutoComplete.setText("" + queryString);
+
                // Toast.makeText(ActionBarSearchActivity.this, "you clicked " + queryString, Toast.LENGTH_LONG).show();
+                newsAdapter.notifyDataSetChanged();
+
+            }
+
+
+
+
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                presenter.loadSearchSuggestion(searchAutoComplete.getText().toString());
+                //newsAdapter.notifyDataSetChanged();
+
+                ArrayList<String> names1 = presenter.getnames();
+
+                ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line,presenter.getnames());
+                searchAutoComplete.setAdapter(newsAdapter);
+
+                newsAdapter.notifyDataSetChanged();
+                //searchAutoComplete.setText("" + names1.get(0));
+
+
+
+                return false;
             }
         });
 
         ImageView searchClose = searchView.findViewById(android.support.v7.appcompat.R.id.search_close_btn);
         searchClose.setImageResource(R.drawable.ic_clear);
 
-
         return super.onCreateOptionsMenu(menu);
     }
+
 
     @Override
     public void setPresenter(@NonNull DashboardContract.Presenter presenter) {

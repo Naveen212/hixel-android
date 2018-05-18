@@ -9,6 +9,7 @@ import com.hixel.hixel.company.CompanyIdentifiers;
 import com.hixel.hixel.models.Company;
 import com.hixel.hixel.models.Portfolio;
 import com.hixel.hixel.search.SearchEntry;
+import com.hixel.hixel.search.SearchSuggestion;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,12 +25,16 @@ public class DashboardPresenter implements DashboardContract.Presenter {
 
     private Portfolio portfolio;
     private final DashboardContract.View dashboardView;
-
+    protected SearchSuggestion searchSuggestion;
+    protected static ArrayList<String> names;
     DashboardPresenter(DashboardContract.View dashboardView) {
         this.dashboardView = dashboardView;
         this.dashboardView.setPresenter(this);
 
         this.portfolio = new Portfolio();
+        this.searchSuggestion=new SearchSuggestion();
+        names=new ArrayList<>();
+
     }
 
     @Override
@@ -44,6 +49,10 @@ public class DashboardPresenter implements DashboardContract.Presenter {
 
         loadPortfolio(companies);
         populateGraph();
+        //loadSearchSuggestion(query); // this will be obtained from the dashboard activity
+
+        names.add("");
+
     }
 
     @Override
@@ -80,8 +89,34 @@ public class DashboardPresenter implements DashboardContract.Presenter {
             public void onFailure(@NonNull Call<ArrayList<Company>> call, @NonNull Throwable t) {
                 Log.d("loadPortfolio",
                       "Failed to load company data from the server: " + t.getMessage());
+
             }
         });
+    }
+    public void loadSearchSuggestion(String query)
+    {
+        ServerInterface client= Client.getRetrofit().create(ServerInterface.class);
+        Call<ArrayList<SearchEntry>>call=client.doSearchQuery(query);
+        call.enqueue(new Callback<ArrayList<SearchEntry>>() {
+            @Override
+            public void onResponse(Call<ArrayList<SearchEntry>> call, Response<ArrayList<SearchEntry>> response) {
+                searchSuggestion.setSearchEntries(response.body());
+                names = searchSuggestion.getNames();
+                if (names.size() != 0) {
+                    Log.d("Search SUggstion=====", "" + names.get(0));
+                }
+            }
+            @Override
+            public void onFailure(Call<ArrayList<SearchEntry>> call, Throwable t) {
+                Log.d("loadPortfolio",
+                        "Failed to load Search suggestions from the server: " + t.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public ArrayList<String> getnames() {
+        return names;
     }
 
 
@@ -99,5 +134,10 @@ public class DashboardPresenter implements DashboardContract.Presenter {
                                            c2.getRatio(name, last_year)));
 
         Collections.reverse(portfolio.getCompanies());
+    }
+
+    @Override
+    public void getQueryString(String query) {
+
     }
 }

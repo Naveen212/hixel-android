@@ -22,4 +22,5 @@ public class SearchEntry {
     public String getExchange() {
         return exchange;
     }
+
 }
